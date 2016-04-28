@@ -16,8 +16,10 @@ import com.groupdocs.viewer.handler.ViewerHtmlHandler;
 import com.groupdocs.viewer.handler.ViewerImageHandler;
 import com.groupdocs.viewer.samples.spring.model.business.HtmlInfo;
 import com.groupdocs.viewer.samples.spring.model.business.ImageInfo;
+import com.groupdocs.viewer.samples.spring.model.request.ViewDocumentRequest;
 import com.groupdocs.viewer.samples.spring.model.response.FileBrowserTreeDataNode;
 import com.groupdocs.viewer.samples.spring.model.response.LoadFileBrowserTreeDataResponse;
+import com.groupdocs.viewer.samples.spring.model.response.ViewDocumentResponse;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
@@ -47,12 +49,12 @@ public class ViewGenerator {
 
     /**
      * Render simple document in html representation
-     * @param documentName     File name
+     * @param request          File name
      * @param DocumentPassword Optional
      * @return the list
      * @throws Exception the exception
      */
-    public static List<HtmlInfo> renderDocumentAsHtml(String documentName, String DocumentPassword) throws Exception {
+    public static ViewDocumentResponse renderDocumentAsHtml(final ViewDocumentRequest request, String DocumentPassword) {
 
         // Create html handler
         ViewerHtmlHandler htmlHandler = new ViewerHtmlHandler(viewerConfig);
@@ -67,12 +69,39 @@ public class ViewGenerator {
         if (DocumentPassword != null && !DocumentPassword.isEmpty()) {
             options.setPassword(DocumentPassword);
         }
+        final ViewDocumentResponse viewDocumentResponse = new ViewDocumentResponse();
+        try {
+            //Get document pages in html form
+            final List<PageHtml> pages = htmlHandler.getPages(request.getPath(), options);
+            final FileType fileType = FileType.fromFileName(request.getFileDisplayName());
+            viewDocumentResponse.setDoc_type(DocumentType.getDocumentType(fileType));
+            viewDocumentResponse.setFileType(fileType.name());
+            viewDocumentResponse.setPath(request.getPath());
+            viewDocumentResponse.setLic(false);
+            viewDocumentResponse.setName(request.getFileDisplayName());
+            viewDocumentResponse.setPage_count(pages.size());
+            viewDocumentResponse.setPageHtml(new String[pages.size()]);
+            viewDocumentResponse.setPageCss(new String[pages.size()]);
+            StringBuilder builder = new StringBuilder("{\"pages\":[");
+            for (int n = 0; n < pages.size(); n++) {
+                final PageHtml pageHtml = pages.get(n);
+                viewDocumentResponse.getPageHtml()[n] = pageHtml.getHtmlContent();
+//                    getPageCss()[n] = pages.get(n).getHtmlResources();
+                if (n > 0) {
+                    builder.append(",");
+                }
+                builder.append("{\"w\":").append(800)
+                        .append(",\"h\":").append(600)
+                        .append(",\"number\":").append(pageHtml.getPageNumber())
+                        .append("}");
+            }
+            builder.append("],\"maxPageHeight\":1000,\"widthForMaxHeight\":800}");
+            viewDocumentResponse.setDocumentDescription(builder.toString());
 
-        //Get document pages in html form
-        List<PageHtml> pages = htmlHandler.getPages(documentName, options);
-
-        return getHtmlInfos(pages);
-        //ExEnd:RenderAsHtml
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return viewDocumentResponse;
     }
 
     /**
@@ -472,6 +501,7 @@ public class ViewGenerator {
 
         final List<FileDescription> fileTree = container.getFileTree();
         final LoadFileBrowserTreeDataResponse response = new LoadFileBrowserTreeDataResponse();
+        final int[] count = {1};
         for (final FileDescription fileDescription : fileTree) {
             response.getNodes().add(new FileBrowserTreeDataNode() {{
                 setGuid(fileDescription.getGuid());
@@ -484,6 +514,8 @@ public class ViewGenerator {
                 setIsKnown(false);
                 setIsShared(false);
                 setType(fileDescription.isDirectory() ? "folder" : "file");
+                setSize(fileDescription.getSize());
+                setId(count[0]++);
             }});
         }
         response.setCount(fileTree.size());

@@ -3,7 +3,9 @@ package com.groupdocs.viewer.samples.spring;
 import com.groupdocs.viewer.samples.spring.config.SpringConfig;
 import com.groupdocs.viewer.samples.spring.model.ViewGenerator;
 import com.groupdocs.viewer.samples.spring.model.request.LoadFileBrowserTreeDataRequest;
+import com.groupdocs.viewer.samples.spring.model.request.ViewDocumentRequest;
 import com.groupdocs.viewer.samples.spring.model.response.LoadFileBrowserTreeDataResponse;
+import com.groupdocs.viewer.samples.spring.model.response.ViewDocumentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -54,4 +56,12 @@ public class HomeController extends GenericController {
     public LoadFileBrowserTreeDataResponse loadFileBrowserTreeDataHandler(Model model, @RequestBody LoadFileBrowserTreeDataRequest request) {
         return ViewGenerator.loadFileTree(request.getPath());
     }
+
+    @ResponseBody
+    @RequestMapping(value = "/ViewDocumentHandler", method = RequestMethod.POST)
+    public ViewDocumentResponse viewDocumentHandler(Model model, @RequestBody ViewDocumentRequest request) {
+        return ViewGenerator.renderDocumentAsHtml(request, null);
+    }
+
+
 }
