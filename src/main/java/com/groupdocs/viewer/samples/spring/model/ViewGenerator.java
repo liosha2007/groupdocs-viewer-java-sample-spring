@@ -7,6 +7,8 @@ import com.groupdocs.viewer.domain.Transformation;
 import com.groupdocs.viewer.domain.WatermarkPosition;
 import com.groupdocs.viewer.domain.containers.FileContainer;
 import com.groupdocs.viewer.domain.containers.FileTreeContainer;
+import com.groupdocs.viewer.domain.containers.RotatePageContainer;
+import com.groupdocs.viewer.domain.html.HtmlResource;
 import com.groupdocs.viewer.domain.html.PageHtml;
 import com.groupdocs.viewer.domain.image.PageImage;
 import com.groupdocs.viewer.domain.options.FileTreeOptions;
@@ -14,20 +16,25 @@ import com.groupdocs.viewer.domain.options.PdfFileOptions;
 import com.groupdocs.viewer.handler.ViewerHandler;
 import com.groupdocs.viewer.handler.ViewerHtmlHandler;
 import com.groupdocs.viewer.handler.ViewerImageHandler;
+import com.groupdocs.viewer.licensing.License;
 import com.groupdocs.viewer.samples.spring.model.business.HtmlInfo;
 import com.groupdocs.viewer.samples.spring.model.business.ImageInfo;
+import com.groupdocs.viewer.samples.spring.model.request.GetImageUrlsRequest;
 import com.groupdocs.viewer.samples.spring.model.request.ViewDocumentRequest;
-import com.groupdocs.viewer.samples.spring.model.response.FileBrowserTreeDataNode;
-import com.groupdocs.viewer.samples.spring.model.response.LoadFileBrowserTreeDataResponse;
-import com.groupdocs.viewer.samples.spring.model.response.ViewDocumentResponse;
+import com.groupdocs.viewer.samples.spring.model.response.*;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +44,7 @@ import java.util.UUID;
  */
 public class ViewGenerator {
 
+    public static final String UPLOAD_DIRECTORY_NAME = "upload";
     private static com.groupdocs.viewer.config.ViewerConfig viewerConfig;
 
     /**
@@ -72,16 +80,21 @@ public class ViewGenerator {
         final ViewDocumentResponse viewDocumentResponse = new ViewDocumentResponse();
         try {
             //Get document pages in html form
-            final List<PageHtml> pages = htmlHandler.getPages(request.getPath(), options);
-            final FileType fileType = FileType.fromFileName(request.getFileDisplayName());
+            final String path = request.getPath();
+            final List<PageHtml> pages = htmlHandler.getPages(path, options);
+            final FileType fileType = FileType.fromFileName(path);
             viewDocumentResponse.setDoc_type(DocumentType.getDocumentType(fileType));
             viewDocumentResponse.setFileType(fileType.name());
-            viewDocumentResponse.setPath(request.getPath());
+            viewDocumentResponse.setPath(path);
             viewDocumentResponse.setLic(false);
-            viewDocumentResponse.setName(request.getFileDisplayName());
+            viewDocumentResponse.setName(path);
             viewDocumentResponse.setPage_count(pages.size());
             viewDocumentResponse.setPageHtml(new String[pages.size()]);
             viewDocumentResponse.setPageCss(new String[pages.size()]);
+            viewDocumentResponse.setLic(License.isValidLicense());
+            viewDocumentResponse.setPdfDownloadUrl("/GetFileHandler?path=" + path + "&getPdf=true");
+            viewDocumentResponse.setPdfPrintUrl("/GetPdfWithPrintDialog?path=" + path);
+            viewDocumentResponse.setUrl("/GetFileHandler?path=" + path + "&getPdf=false");
             StringBuilder builder = new StringBuilder("{\"pages\":[");
             for (int n = 0; n < pages.size(); n++) {
                 final PageHtml pageHtml = pages.get(n);
@@ -94,6 +107,7 @@ public class ViewGenerator {
                         .append(",\"h\":").append(600)
                         .append(",\"number\":").append(pageHtml.getPageNumber())
                         .append("}");
+                saveDocumentHtmlResources(request.getFileDisplayName(), htmlHandler, pageHtml, path);
             }
             builder.append("],\"maxPageHeight\":1000,\"widthForMaxHeight\":800}");
             viewDocumentResponse.setDocumentDescription(builder.toString());
@@ -102,6 +116,41 @@ public class ViewGenerator {
             e.printStackTrace();
         }
         return viewDocumentResponse;
+    }
+
+    private static void saveDocumentHtmlResources(String fileDisplayName, ViewerHtmlHandler htmlHandler, PageHtml pageHtml, String path) {
+        try {
+            final List<HtmlResource> htmlResources = pageHtml.getHtmlResources();
+            for (HtmlResource htmlResource : htmlResources) {
+                final int documentPageNumber = htmlResource.getDocumentPageNumber();
+                final String resourceName = htmlResource.getResourceName();
+
+                File resourceFile = getHtmlResourcePath(fileDisplayName, documentPageNumber, resourceName);
+                if (!resourceFile.getParentFile().exists()) {
+                    if (!resourceFile.getParentFile().mkdirs()) {
+                        System.out.println("Can't create directory for resource: " + resourceFile.getParent());
+                    }
+                } else if (resourceFile.exists() && !resourceFile.delete()) {
+                    System.out.println("Can't delete previous resource: " + resourceFile.getAbsolutePath());
+                }
+                final InputStream inputStream = htmlHandler.getResource(path, htmlResource);
+                System.out.println("Write resource file: " + resourceFile.getAbsolutePath());
+                FileUtils.writeByteArrayToFile(resourceFile, IOUtils.toByteArray(inputStream));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static File getHtmlResourcePath(String fileDisplayName, int documentPageNumber, String resourceName) {
+        final String tempPath = viewerConfig.getTempPath();
+        return new File(tempPath
+                + File.separator
+                + fileDisplayName
+                + File.separator
+                + documentPageNumber
+                + File.separator
+                + resourceName);
     }
 
     /**
@@ -138,35 +187,35 @@ public class ViewGenerator {
      * Rotate document as html list.
      * @param DocumentName     the document name
      * @param pageNumber       the page number
-     * @param RotationAngle    the rotation angle
+     * @param rotationAngle    the rotation angle
      * @param DocumentPassword the document password
      * @return the list
      * @throws Exception the exception
      */
-    public static List<HtmlInfo> rotateDocumentAsHtml(String DocumentName, int pageNumber, int RotationAngle, String DocumentPassword) throws Exception {
-        // Guid implies that unique document name
-        // Create image handler
-        ViewerHandler handler = new ViewerHtmlHandler(viewerConfig);
-        //Initialize ImageOptions Object and setting Rotate Transformation
-        HtmlOptions options = new HtmlOptions();
-        options.setTransformations(Transformation.Rotate);
+    public static RotatePageResponse rotateDocumentAsHtml(String DocumentName, int pageNumber, int rotationAngle, String DocumentPassword) {
+        RotatePageResponse response = new RotatePageResponse();
+        try {
+            // Create image handler
+            ViewerHandler handler = new ViewerHtmlHandler(viewerConfig);
+            //Initialize ImageOptions Object and setting Rotate Transformation
+            HtmlOptions options = new HtmlOptions();
+            options.setTransformations(Transformation.Rotate);
 
-        // Set password if document is password protected.
-        if (DocumentPassword != null && !DocumentPassword.isEmpty()) {
-            options.setPassword(DocumentPassword);
+            // Set password if document is password protected.
+            if (DocumentPassword != null && !DocumentPassword.isEmpty()) {
+                options.setPassword(DocumentPassword);
+            }
+
+            //Call RotatePages to apply rotate transformation to a page
+            final RotatePageContainer rotatePageContainer = Utilities.PageTransformations.rotatePages(handler, DocumentName, pageNumber, rotationAngle);
+
+            response.setResultAngle(rotatePageContainer.getCurrentRotationAngle());
+            response.setSuccess(true);
+        } catch (Exception e) {
+            response.setSuccess(false);
+            e.printStackTrace();
         }
-
-        //Call RotatePages to apply rotate transformation to a page
-        Utilities.PageTransformations.rotatePages(handler, DocumentName, pageNumber, RotationAngle);
-
-        //down cast the handler(ViewerHandler) to viewerHtmlHandler
-        ViewerHtmlHandler htmlHandler = (ViewerHtmlHandler) handler;
-
-        //Get document pages in image form
-        List<PageHtml> pages = htmlHandler.getPages(DocumentName, options);
-
-        return getHtmlInfos(pages);
-        //ExEnd:RenderAsImageWithRotationTransformation
+        return response;
     }
 
     /**
@@ -531,5 +580,88 @@ public class ViewGenerator {
     public static byte[] loadPageImage(String filename) throws IOException {
         final File imagePath = Utilities.makeImagePath(viewerConfig.getTempPath(), filename);
         return FileUtils.readFileToByteArray(imagePath);
+    }
+
+    public static GetImageUrlsResponse createImageUrls(GetImageUrlsRequest request) {
+        final String path = request.getPath();
+        final Integer firstPage = request.getFirstPage();
+        Integer pageCount = request.getPageCount();
+        final Integer width = request.getWidth();
+        final Integer quality = request.getQuality();
+        final Boolean usePdf = request.isUsePdf();
+        final List<String> imageUrls = new ArrayList<String>();
+        if (pageCount == null) { // For printing
+            ViewerImageHandler imageHandler = new ViewerImageHandler(viewerConfig);
+            pageCount = imageHandler.getPages(path).size();
+        }
+        for (int n = firstPage; n < firstPage + pageCount; n++) {
+            StringBuilder builder = new StringBuilder("/GetDocumentPageImageHandler?")
+                    .append("path=").append(path).append("&")
+                    .append("pageIndex=").append(n).append("&")
+                    .append("width=").append(width == null ? 800 : width);
+            imageUrls.add(builder.toString());
+        }
+        return new GetImageUrlsResponse() {{
+            setImageUrls(imageUrls);
+        }};
+    }
+
+    public static byte[] renderThumbnailForDocumentPage(String path, Integer width, Integer pageIndex) {
+        ViewerImageHandler imageHandler = new ViewerImageHandler(viewerConfig);
+
+        //Initialize ImageOptions Object
+        ImageOptions options = new ImageOptions();
+        if (width != null) {
+            options.setWidth((int) (width * 1.7));
+            options.setHeight(width * 2);
+        }
+        options.setPageNumber(pageIndex + 1);
+        options.setCountPagesToConvert(1);
+
+        //Get document pages in image form
+        synchronized (ViewGenerator.class) {
+            List<PageImage> images = imageHandler.getPages(path, options);
+            try {
+                if (images.size() == 1) {
+                    return StreamUtils.copyToByteArray(images.get(0).getStream());
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+    public static byte[] readFileData(String path, boolean getPdf) {
+        ViewerImageHandler imageHandler = new ViewerImageHandler(viewerConfig);
+        final FileContainer file = imageHandler.getFile(path);
+        try {
+            return IOUtils.toByteArray(file.getStream());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static String uploadFile(MultipartFile file) {
+        final String originalFilename = file.getOriginalFilename();
+        File uploadPath = new File(viewerConfig.getStoragePath() + File.separator + UPLOAD_DIRECTORY_NAME);
+        File uploadFilePath =
+                new File(uploadPath.getAbsolutePath()
+                        + File.separator
+                        + FilenameUtils.getBaseName(originalFilename) + "-"
+                        + GregorianCalendar.getInstance().getTimeInMillis() + "."
+                        + FilenameUtils.getExtension(originalFilename));
+        try {
+            final InputStream inputStream = file.getInputStream();
+            if (!uploadPath.exists() && !uploadPath.mkdirs()) {
+                throw new Exception("Can't create upload directory!");
+            }
+            FileUtils.writeByteArrayToFile(uploadFilePath, IOUtils.toByteArray(inputStream));
+            System.out.println("File uploaded: " + uploadFilePath);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return UPLOAD_DIRECTORY_NAME + "/" + uploadFilePath.getName();
     }
 }

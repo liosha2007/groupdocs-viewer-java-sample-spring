@@ -54,7 +54,7 @@
                     downloadPdfFile: false,
                     enableStandardErrorHandling: true,
                     fileDisplayName: '',
-                    filePath: ('${filePath}'.length > 0) ? '${filePath}' : null,
+                    filePath: ('${FilePath}'.length > 0) ? '${FilePath}' : null,
                     height: 650,
                     ignoreDocumentAbsence: false,
                     initialZoom: 100,

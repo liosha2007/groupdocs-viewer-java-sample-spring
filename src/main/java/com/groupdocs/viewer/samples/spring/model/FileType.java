@@ -99,7 +99,7 @@ public enum FileType {
         if (!fileDisplayName.contains(".")) {
             return DIRECTORY;
         }
-        final String substring = fileDisplayName.substring(fileDisplayName.lastIndexOf("."));
+        final String substring = fileDisplayName.substring(fileDisplayName.lastIndexOf(".") + 1);
         return getValue(substring.toUpperCase());
     }
 }

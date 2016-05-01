@@ -4,6 +4,7 @@ import com.groupdocs.viewer.converter.options.HtmlOptions;
 import com.groupdocs.viewer.converter.options.ImageOptions;
 import com.groupdocs.viewer.domain.Watermark;
 import com.groupdocs.viewer.domain.WatermarkPosition;
+import com.groupdocs.viewer.domain.containers.RotatePageContainer;
 import com.groupdocs.viewer.domain.options.ReorderPageOptions;
 import com.groupdocs.viewer.domain.options.RotatePageOptions;
 import com.groupdocs.viewer.handler.ViewerHandler;
@@ -58,10 +59,10 @@ public class Utilities {
          * @param angle      the angle
          * @throws Exception the exception
          */
-        public static void rotatePages(ViewerHandler handler, String guid, int pageNumber, int angle) throws Exception {
+        public static RotatePageContainer rotatePages(ViewerHandler handler, String guid, int pageNumber, int angle) throws Exception {
             //ExStart:rotationAngle
             // Set the property of handler's rotate Page
-            handler.rotatePage(new RotatePageOptions(guid, pageNumber, angle));
+            return handler.rotatePage(new RotatePageOptions(guid, pageNumber, angle));
             //ExEnd:rotationAngle
         }
 
@@ -183,7 +184,7 @@ public class Utilities {
         if (!directory.exists() && !directory.mkdirs()) {
             System.out.println("Can't create directory for images! " + directory.getAbsolutePath());
         }
-        return new File(directory.getAbsolutePath() + File.separator + FilenameUtils.getBaseName(imageName) + ".jpg");
+        return new File(directory.getAbsolutePath() + File.separator + FilenameUtils.getBaseName(imageName) + ".png");
     }
 
     /**
