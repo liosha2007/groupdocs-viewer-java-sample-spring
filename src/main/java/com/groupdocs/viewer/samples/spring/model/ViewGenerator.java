@@ -559,7 +559,7 @@ public class ViewGenerator {
                 setFileType(fileDescription.isDirectory() ? "[DIRECTORY_TYPE]" : fileDescription.getFileType());
                 setModifyTime(fileDescription.getLastModificationDate().getTime());
                 setName(fileDescription.getName());
-                setPath(fileDescription.getName());
+                setPath(path == null || path.isEmpty() ? fileDescription.getName() : path + "/" + fileDescription.getName());
                 setIsKnown(false);
                 setIsShared(false);
                 setType(fileDescription.isDirectory() ? "folder" : "file");
