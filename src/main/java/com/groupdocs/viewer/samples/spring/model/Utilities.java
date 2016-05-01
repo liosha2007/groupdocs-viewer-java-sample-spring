@@ -57,6 +57,7 @@ public class Utilities {
          * @param guid       the guid
          * @param pageNumber the page number
          * @param angle      the angle
+         * @return the rotate page container
          * @throws Exception the exception
          */
         public static RotatePageContainer rotatePages(ViewerHandler handler, String guid, int pageNumber, int angle) throws Exception {

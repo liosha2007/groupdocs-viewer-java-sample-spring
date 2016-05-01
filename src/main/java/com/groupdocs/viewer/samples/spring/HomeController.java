@@ -1,7 +1,6 @@
 package com.groupdocs.viewer.samples.spring;
 
 import com.groupdocs.viewer.samples.spring.config.SpringConfig;
-import com.groupdocs.viewer.samples.spring.model.ViewGenerator;
 import com.groupdocs.viewer.samples.spring.model.request.GetImageUrlsRequest;
 import com.groupdocs.viewer.samples.spring.model.request.LoadFileBrowserTreeDataRequest;
 import com.groupdocs.viewer.samples.spring.model.request.RotatePageRequest;
@@ -41,6 +40,7 @@ public class HomeController extends GenericController {
      * Index string.
      * @param model   the model
      * @param request the request
+     * @param path    the path
      * @return the string
      */
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -60,46 +60,78 @@ public class HomeController extends GenericController {
     @ResponseBody
     @RequestMapping(value = "/LoadFileBrowserTreeDataHandler", method = RequestMethod.POST)
     public LoadFileBrowserTreeDataResponse loadFileBrowserTreeDataHandler(@RequestBody LoadFileBrowserTreeDataRequest request) {
-        return ViewGenerator.loadFileTree(request.getPath());
+        return viewerBean.loadFileTree(request.getPath());
     }
 
+    /**
+     * View document handler view document response.
+     * @param request the request
+     * @return the view document response
+     */
     @ResponseBody
     @RequestMapping(value = "/ViewDocumentHandler", method = RequestMethod.POST)
     public ViewDocumentResponse viewDocumentHandler(@RequestBody ViewDocumentRequest request) {
-        return ViewGenerator.renderDocumentAsHtml(request, null);
+        return viewerBean.renderDocument(request);
     }
 
+    /**
+     * Gets image urls handler.
+     * @param request the request
+     * @return the image urls handler
+     */
     @ResponseBody
     @RequestMapping(value = "/GetImageUrlsHandler", method = RequestMethod.POST)
     public GetImageUrlsResponse getImageUrlsHandler(@RequestBody GetImageUrlsRequest request) {
-        return ViewGenerator.createImageUrls(request);
+        return viewerBean.createImageUrls(request);
     }
 
+    /**
+     * Get document page image handler byte [ ].
+     * @param path      the path
+     * @param width     the width
+     * @param pageIndex the page index
+     * @return the byte [ ]
+     */
     @ResponseBody
     @RequestMapping(value = "/GetDocumentPageImageHandler", method = RequestMethod.GET, produces = MediaType.IMAGE_PNG_VALUE)
     public byte[] getDocumentPageImageHandler(@RequestParam("path") String path,
                                               @RequestParam("width") Integer width,
                                               @RequestParam("pageIndex") Integer pageIndex) {
-        return ViewGenerator.renderThumbnailForDocumentPage(path, width, pageIndex);
+        return viewerBean.renderDocumentImage(path, width, pageIndex);
     }
 
+    /**
+     * Get file handler byte [ ].
+     * @param path     the path
+     * @param response the response
+     * @return the byte [ ]
+     */
     @ResponseBody
     @RequestMapping(value = "/GetFileHandler", method = RequestMethod.GET, produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public byte[] getFileHandler(@RequestParam("path") String path, @RequestParam("getPdf") boolean getPdf, HttpServletResponse response) {
+    public byte[] getFileHandler(@RequestParam("path") String path, HttpServletResponse response) {
         response.setHeader("Content-Disposition", "attachment; filename=\"" + path + "\"");
-        return ViewGenerator.readFileData(path, getPdf);
+        return viewerBean.readDocumentData(path);
     }
 
+    /**
+     * Rotate page handler rotate page response.
+     * @param request the request
+     * @return the rotate page response
+     */
     @ResponseBody
     @RequestMapping(value = "/RotatePageHandler", method = RequestMethod.POST)
     public RotatePageResponse rotatePageHandler(@RequestBody RotatePageRequest request) {
-        return ViewGenerator.rotateDocumentAsHtml(request.getPath(), request.getPageNumber() + 1, request.getRotationAmount(), null);
+        return viewerBean.rotateDocument(request.getPath(), request.getPageNumber() + 1, request.getRotationAmount());
     }
 
+    /**
+     * Upload file string.
+     * @param file     the file
+     * @param response the response
+     * @return the string
+     */
     @RequestMapping(value = "/UploadFile", method = RequestMethod.POST)
     public String uploadFile(@RequestParam("fileName") MultipartFile file, HttpServletResponse response) {
-        // Upload file
-        return "redirect:" + springConfig.getApplicationPath() + "?path=" + ViewGenerator.uploadFile(file);
+        return "redirect:" + springConfig.getApplicationPath() + "?path=" + viewerBean.uploadFile(file);
     }
-
 }

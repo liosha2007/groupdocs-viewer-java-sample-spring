@@ -2,23 +2,58 @@ package com.groupdocs.viewer.samples.spring.model;
 
 import java.util.HashMap;
 
+/**
+ * The type Document type.
+ */
 public class DocumentType {
+    /**
+     * The constant WORDS.
+     */
     public static final String WORDS = "Words";
+    /**
+     * The constant PDF.
+     */
     public static final String PDF = "Pdf";
+    /**
+     * The constant SLIDES.
+     */
     public static final String SLIDES = "Slides";
+    /**
+     * The constant CELLS.
+     */
     public static final String CELLS = "Cells";
+    /**
+     * The constant IMAGE.
+     */
     public static final String IMAGE = "Image";
+    /**
+     * The constant EMAIL.
+     */
     public static final String EMAIL = "Email";
+    /**
+     * The constant DIAGRAM.
+     */
     public static final String DIAGRAM = "Diagram";
+    /**
+     * The constant PROJECT.
+     */
     public static final String PROJECT = "Project";
+    /**
+     * The constant UNKNOWN.
+     */
     public static final String UNKNOWN = "Unknown";
-    
-    public static String getDocumentType(FileType fileType){
+
+    /**
+     * Gets document type.
+     * @param fileType the file type
+     * @return the document type
+     */
+    public static String getDocumentType(FileType fileType) {
         return getDocumentTypeMap().get(fileType);
     }
-    
-    private static HashMap<FileType,String> getDocumentTypeMap(){
-        final HashMap<FileType,String> documentTypeMap = new HashMap<FileType,String>();
+
+    private static HashMap<FileType, String> getDocumentTypeMap() {
+        final HashMap<FileType, String> documentTypeMap = new HashMap<FileType, String>();
         documentTypeMap.put(FileType.DOC, WORDS);
         documentTypeMap.put(FileType.DOCX, WORDS);
         documentTypeMap.put(FileType.DOT, WORDS);
@@ -46,7 +81,7 @@ public class DocumentType {
         documentTypeMap.put(FileType.PPS, SLIDES);
         documentTypeMap.put(FileType.PPSX, SLIDES);
         documentTypeMap.put(FileType.ODP, SLIDES);
-        
+
         documentTypeMap.put(FileType.XLS, CELLS);
         documentTypeMap.put(FileType.XLSX, CELLS);
         documentTypeMap.put(FileType.XLSM, CELLS);
@@ -74,7 +109,7 @@ public class DocumentType {
         documentTypeMap.put(FileType.PST, EMAIL);
         documentTypeMap.put(FileType.EMLX, EMAIL);
         documentTypeMap.put(FileType.TNEF, EMAIL);
-        
+
         documentTypeMap.put(FileType.VSD, DIAGRAM);
         documentTypeMap.put(FileType.VSS, DIAGRAM);
         documentTypeMap.put(FileType.VTX, DIAGRAM);
@@ -85,13 +120,13 @@ public class DocumentType {
         documentTypeMap.put(FileType.VSDX, DIAGRAM);
         documentTypeMap.put(FileType.VSDM, DIAGRAM);
         documentTypeMap.put(FileType.UML, DIAGRAM);
-        
+
         documentTypeMap.put(FileType.PROJECT, PROJECT);
         documentTypeMap.put(FileType.MPP, PROJECT);
         documentTypeMap.put(FileType.MPT, PROJECT);
-        
+
         documentTypeMap.put(FileType.UNKNOWN, UNKNOWN);
-        
+
         return documentTypeMap;
     }
 }

@@ -16,6 +16,8 @@ public class SpringConfig {
     private String licensePath;
     @Property(key = "applicationPath")
     private String applicationPath;
+    @Property(key = "useHtmlBasedEngine")
+    private Boolean useHtmlBasedEngine;
 
     /**
      * Gets storage path.
@@ -63,5 +65,21 @@ public class SpringConfig {
      */
     public void setApplicationPath(String applicationPath) {
         this.applicationPath = applicationPath;
+    }
+
+    /**
+     * Gets use html based engine.
+     * @return the use html based engine
+     */
+    public Boolean getUseHtmlBasedEngine() {
+        return useHtmlBasedEngine;
+    }
+
+    /**
+     * Sets use html based engine.
+     * @param useHtmlBasedEngine the use html based engine
+     */
+    public void setUseHtmlBasedEngine(Boolean useHtmlBasedEngine) {
+        this.useHtmlBasedEngine = useHtmlBasedEngine;
     }
 }

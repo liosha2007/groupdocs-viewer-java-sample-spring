@@ -1,8 +1,10 @@
 package com.groupdocs.viewer.samples.spring;
 
+import com.groupdocs.viewer.samples.spring.beans.GenericViewerBean;
+import com.groupdocs.viewer.samples.spring.beans.HtmlViewerBean;
+import com.groupdocs.viewer.samples.spring.beans.ImageViewerBean;
 import com.groupdocs.viewer.samples.spring.config.SpringConfig;
 import com.groupdocs.viewer.samples.spring.config.ViewerConfig;
-import com.groupdocs.viewer.samples.spring.model.ViewGenerator;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,15 +22,24 @@ public class GenericController {
      * The Viewer config.
      */
     protected ViewerConfig viewerConfig;
+    /**
+     * The Viewer bean.
+     */
+    protected GenericViewerBean viewerBean;
 
     /**
      * Instantiates a new Generic controller.
      * @param springConfig the spring config
      */
     public GenericController(SpringConfig springConfig) {
-        this.viewerConfig = new ViewerConfig(springConfig);
         this.springConfig = springConfig;
-        ViewGenerator.initGenerator(viewerConfig);
+        this.viewerConfig = new ViewerConfig(springConfig);
+        final Boolean useHtmlBasedEngine = springConfig.getUseHtmlBasedEngine();
+        if (useHtmlBasedEngine == null || !useHtmlBasedEngine) {
+            viewerBean = new ImageViewerBean(viewerConfig);
+        } else {
+            viewerBean = new HtmlViewerBean(viewerConfig);
+        }
     }
 
     /**
