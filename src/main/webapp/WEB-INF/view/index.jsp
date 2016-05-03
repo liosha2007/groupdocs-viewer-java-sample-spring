@@ -100,7 +100,7 @@
                     treatPhrasesInDoubleQuotesAsExactPhrases: false,
                     useAccentInsensitiveSearch: false,
                     useEmScaling: false,
-                    useHtmlBasedEngine: true,
+                    useHtmlBasedEngine: ${useHtmlBasedEngine},
                     useHtmlThumbnails: false,
                     useImageBasedPrinting: true,
                     useInnerThumbnails: true,

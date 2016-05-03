@@ -36,7 +36,7 @@ public class HtmlViewerBean extends GenericViewerBean {
      * @return the view document response
      */
     @Override
-    public ViewDocumentResponse renderDocument(ViewDocumentRequest request) {
+    public ViewDocumentResponse renderDocument(ViewDocumentRequest request, String baseUrl) {
 
         // Create html handler
         ViewerHtmlHandler htmlHandler = new ViewerHtmlHandler(viewerConfig);
@@ -56,7 +56,7 @@ public class HtmlViewerBean extends GenericViewerBean {
             viewDocumentResponse.setDoc_type(DocumentType.getDocumentType(fileType));
             viewDocumentResponse.setFileType(fileType.name());
             viewDocumentResponse.setPath(path);
-            viewDocumentResponse.setLic(false);
+            viewDocumentResponse.setLic(License.isValidLicense());
             viewDocumentResponse.setName(path);
             viewDocumentResponse.setPage_count(pages.size());
             viewDocumentResponse.setPageHtml(new String[pages.size()]);

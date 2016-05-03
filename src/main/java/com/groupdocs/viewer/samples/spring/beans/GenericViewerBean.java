@@ -90,7 +90,7 @@ public abstract class GenericViewerBean {
      * @param request the request
      * @return the view document response
      */
-    public abstract ViewDocumentResponse renderDocument(ViewDocumentRequest request);
+    public abstract ViewDocumentResponse renderDocument(ViewDocumentRequest request, String baseUrl);
 
     /**
      * Render document image byte [ ].

@@ -44,11 +44,11 @@ public class HomeController extends GenericController {
      * @return the string
      */
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String index(Model model, HttpServletRequest request, @RequestParam(value = "path", required = false) String path) {
+    public String index(Model model, HttpServletRequest request, @RequestParam(value = "path", required = false, defaultValue = "") String path) {
+        final Boolean useHtmlBasedEngine = springConfig.getUseHtmlBasedEngine();
         model.addAttribute("BaseUrl", makeBaseUrl(request));
-        if (path != null && !path.isEmpty()) {
-            model.addAttribute("FilePath", path);
-        }
+        model.addAttribute("FilePath", path);
+        model.addAttribute("useHtmlBasedEngine", useHtmlBasedEngine == null ? "true" : useHtmlBasedEngine);
         return "index";
     }
 
@@ -65,13 +65,13 @@ public class HomeController extends GenericController {
 
     /**
      * View document handler view document response.
-     * @param request the request
+     * @param request the servletRequest
      * @return the view document response
      */
     @ResponseBody
     @RequestMapping(value = "/ViewDocumentHandler", method = RequestMethod.POST)
-    public ViewDocumentResponse viewDocumentHandler(@RequestBody ViewDocumentRequest request) {
-        return viewerBean.renderDocument(request);
+    public ViewDocumentResponse viewDocumentHandler(HttpServletRequest servletRequest, @RequestBody ViewDocumentRequest request) {
+        return viewerBean.renderDocument(request, makeBaseUrl(servletRequest));
     }
 
     /**

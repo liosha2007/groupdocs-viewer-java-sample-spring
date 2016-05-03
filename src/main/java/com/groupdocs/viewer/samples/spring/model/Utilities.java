@@ -26,6 +26,7 @@ import java.util.List;
  */
 public class Utilities {
 
+
     private static List<String> EXT_ARR = Arrays.asList("doc", "docx", "xls", "xlsx", "pdf", "ppt", "pptx", "html", "xml", "bmp", "jpg", "gif");
 
 

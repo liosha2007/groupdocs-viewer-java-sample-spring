@@ -42,12 +42,13 @@ public class GenericController {
         }
     }
 
+
     /**
      * Make base url object.
      * @param request the request
      * @return the object
      */
-    protected Object makeBaseUrl(HttpServletRequest request) {
+    protected String makeBaseUrl(HttpServletRequest request) {
         String appPath = springConfig.getApplicationPath();
         if (appPath == null || appPath.equalsIgnoreCase("null") || appPath.isEmpty()) {
             final String contextPath = request.getContextPath();
@@ -63,5 +64,4 @@ public class GenericController {
             return appPath.endsWith("/") ? appPath : appPath + "/";
         }
     }
-
 }

@@ -1,5 +1,6 @@
 package com.groupdocs.viewer.samples.spring.model.response;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,7 +12,7 @@ public class ViewDocumentResponse {
     private String fileType;
     private String path;
     private String id;
-    private List<String> imageUrls;
+    private List<String> imageUrls = new ArrayList<String>(0);
     private Boolean lic;
     private String name;
     private Integer page_count;
